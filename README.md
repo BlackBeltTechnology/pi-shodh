@@ -59,32 +59,52 @@ Backed by **shodh-memory** — a local Rust binary with offline embeddings, Hebb
 
 ## Install
 
-### Project-local (recommended)
-
-From your project directory:
+### From git
 
 ```bash
-pi install -l /path/to/pi-shodh
+# project-local — only loads in this project
+pi install -l git:github.com/<you>/pi-shodh
+
+# global — all pi sessions
+pi install git:github.com/<you>/pi-shodh
+
+# pin to a tag or branch
+pi install -l git:github.com/<you>/pi-shodh@v0.1.0
 ```
 
-This adds it to `.pi/settings.json` so the extension only loads in this project.
-
-### Global
+### From a local clone
 
 ```bash
-pi install /path/to/pi-shodh
+git clone https://github.com/<you>/pi-shodh
+cd pi-shodh
+npm install
+pi install -l "$PWD"            # project-local
+# or: pi install "$PWD"          # global
 ```
-
-This adds it to `~/.pi/agent/settings.json` so all your pi sessions get memory.
 
 ### What `pi install` does
 
-1. Runs `npm install` in the pi-shodh package
-2. The `postinstall` script (`scripts/fetch-binaries.mjs --ensure-current`) downloads the **shodh-memory binary for your OS** (~75 MB) from [shodh's GitHub releases](https://github.com/varun29ankuS/shodh-memory/releases)
-3. Sets the executable bit on the binaries
-4. pi auto-discovers the extension via `package.json#pi.extensions`
+1. Resolves the package (git clone or local path)
+2. Runs `npm install`
+3. Runs `postinstall`:
+   - `fetch-binaries.mjs --ensure-current` — downloads **only your platform's** binary (~75 MB) from [shodh's GitHub releases](https://github.com/varun29ankuS/shodh-memory/releases)
+   - `fix-permissions.cjs` — chmod +x on the bundled files
+4. Auto-discovers the extension via `package.json#pi.extensions`
 
-You don't need Docker, npm publish, or external services. Just internet for the one-time binary download.
+Idempotent — re-running is fast (~150 ms) when binaries are already in place.
+
+### Where things live
+
+| Thing | Path |
+|---|---|
+| Extension settings (project) | `<your-project>/.pi/settings.json` |
+| Extension settings (global) | `~/.pi/agent/settings.json` |
+| Git-cloned package (project) | `<your-project>/.pi/git/github.com/<you>/pi-shodh/` |
+| Git-cloned package (global) | `~/.pi/agent/git/github.com/<you>/pi-shodh/` |
+| Downloaded binaries | `<package>/binaries/<platform>-<arch>/` |
+| Memory database | `~/.cache/shodh-memory/data/` |
+
+No Docker, no npm registry, no API keys.
 
 ### Verify
 
