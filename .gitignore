@@ -1,0 +1,8 @@
+node_modules/
+
+# The actual platform binaries are populated by `npm run fetch-binaries`
+# before publishing. They are large (~73 MB extracted per platform,
+# ~365 MB total across 5 platforms) and would bloat the git repo.
+# The npm tarball ships them via package.json "files" + prepack hook.
+binaries/*
+!binaries/README.md

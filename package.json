@@ -1,0 +1,34 @@
+{
+  "name": "pi-shodh",
+  "version": "0.1.0",
+  "description": "Local adaptive shodh memory for pi agents.",
+  "keywords": [
+    "pi-package"
+  ],
+  "pi": {
+    "extensions": [
+      "./extensions"
+    ]
+  },
+  "files": [
+    "extensions/",
+    "binaries/",
+    "scripts/fetch-binaries.mjs",
+    "scripts/fix-permissions.cjs",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "fetch-binaries": "node scripts/fetch-binaries.mjs",
+    "postinstall": "node scripts/fetch-binaries.mjs --ensure-current --quiet && node scripts/fix-permissions.cjs",
+    "prepack": "node scripts/fetch-binaries.mjs"
+  },
+  "dependencies": {
+    "yaml": "^2.8.0"
+  },
+  "peerDependencies": {
+    "@mariozechner/pi-ai": "*",
+    "@mariozechner/pi-coding-agent": "*",
+    "@mariozechner/pi-tui": "*"
+  }
+}
