@@ -19,9 +19,10 @@
  */
 
 import { spawn, type ChildProcess } from "node:child_process";
+import { createHash } from "node:crypto";
 import { existsSync, mkdirSync } from "node:fs";
 import { homedir } from "node:os";
-import { dirname, join } from "node:path";
+import { basename, dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import type {
 	ProactiveContextRequest,
@@ -35,12 +36,43 @@ import type {
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
-/** Default config — read env, fall back to local dev defaults. */
-export function defaultConfig(): ShodhConfig {
+/**
+ * Derive a stable, readable, and unique userId from a project directory.
+ *
+ * Format: `pi-<basename>-<8charHash>`
+ *   - basename gives at-a-glance recognition in shodh's TUI / API
+ *   - 8-char SHA-256 prefix of the absolute path disambiguates collisions
+ *     (e.g. two `~/projects/api` checked out in different roots)
+ *   - sanitized to [a-z0-9-]+ so it's safe in URLs, tags, filenames
+ *
+ * Examples:
+ *   /home/skrot1/BME/szakdoga          -> pi-szakdoga-3f2a1c4d
+ *   /tmp/foo bar/Project (1)           -> pi-project-1-9b2e4a8f
+ *   (empty / unresolvable cwd)         -> pi (the legacy single-namespace id)
+ */
+export function deriveUserId(cwd: string | undefined): string {
+	if (!cwd) return "pi";
+	const abs = resolve(cwd);
+	const rawName = basename(abs).toLowerCase().replace(/[^a-z0-9-]+/g, "-").replace(/^-+|-+$/g, "");
+	const name = rawName || "project";
+	const hash = createHash("sha256").update(abs).digest("hex").slice(0, 8);
+	return `pi-${name}-${hash}`;
+}
+
+/**
+ * Default config — read env, fall back to local dev defaults.
+ *
+ * @param cwd  Working directory to derive a per-project namespace from.
+ *             When omitted, falls back to the legacy global "pi" id so the
+ *             function stays callable in unit tests / standalone scripts.
+ */
+export function defaultConfig(cwd?: string): ShodhConfig {
 	return {
 		baseUrl: process.env.SHODH_API_URL ?? "http://127.0.0.1:3030",
 		apiKey: process.env.SHODH_API_KEY ?? "sk-shodh-dev-local-testing-key",
-		userId: process.env.SHODH_USER_ID ?? "pi",
+		// Per-project namespace by default; user can override with SHODH_USER_ID.
+		// Same shodh server, separate userIds = naturally scoped recall.
+		userId: process.env.SHODH_USER_ID ?? deriveUserId(cwd),
 		dataPath: process.env.SHODH_DATA_PATH ?? join(homedir(), ".cache", "shodh-memory", "data"),
 		spawnServer: process.env.SHODH_SPAWN !== "0",
 		binaryDir: process.env.SHODH_BINARY_DIR,
@@ -85,13 +117,29 @@ export function resolveOnnxRuntimePath(config: ShodhConfig): string | null {
 }
 
 export class ShodhServer {
-	readonly config: ShodhConfig;
+	/**
+	 * Mutable on purpose: the factory function constructs the server before
+	 * we know the session's cwd, then session_start calls setUserId() with
+	 * a per-project namespace. Other config fields (baseUrl, apiKey, paths)
+	 * are stable for the process lifetime.
+	 */
+	config: ShodhConfig;
 	private child: ChildProcess | null = null;
 	/** Set to true once /health responded ok. */
 	private ready = false;
 
 	constructor(config: Partial<ShodhConfig> = {}) {
 		this.config = { ...defaultConfig(), ...config };
+	}
+
+	/**
+	 * Update the active userId. Call from session_start to switch to a
+	 * per-project namespace. No-op if SHODH_USER_ID is set in the env
+	 * (explicit user override always wins).
+	 */
+	setUserId(userId: string): void {
+		if (process.env.SHODH_USER_ID) return;
+		this.config = { ...this.config, userId };
 	}
 
 	// -------------------------------------------------------------------

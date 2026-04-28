@@ -9,7 +9,7 @@
  * Configuration via env vars (see shodh-server.ts → defaultConfig):
  *   SHODH_API_URL    base URL of the server (default http://127.0.0.1:3030)
  *   SHODH_API_KEY    API key (default = dev key, fine for local use)
- *   SHODH_USER_ID    namespace for memories (default "pi")
+ *   SHODH_USER_ID    namespace for memories (default: per-project, derived from cwd)
  *   SHODH_DATA_PATH  RocksDB storage location (default ~/.cache/shodh-memory/data)
  *   SHODH_SPAWN=0    skip spawning the bundled binary (attach to external server)
  *   SHODH_QUIET=1    suppress shodh stdout/stderr in the pi UI
@@ -32,9 +32,12 @@ export default function (pi: ExtensionAPI): void {
 		description: "Show shodh memory server status",
 		handler: async (_args, ctx) => {
 			const url = server.config.baseUrl;
+			const ns = server.config.userId;
 			const ready = server.isReady();
 			ctx.ui.notify(
-				ready ? `shodh: online @ ${url}` : `shodh: offline (set SHODH_API_URL or check binary)`,
+				ready
+					? `shodh: online @ ${url}  ns=${ns}`
+					: `shodh: offline (set SHODH_API_URL or check binary)`,
 				ready ? "info" : "error",
 			);
 		},

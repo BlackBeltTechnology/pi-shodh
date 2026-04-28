@@ -199,7 +199,7 @@ All knobs are environment variables (no config file). Defaults work for local si
 |---|---|---|
 | `SHODH_API_URL` | `http://127.0.0.1:3030` | Where the shodh server lives. Set to a remote URL to share memories across machines/teams. |
 | `SHODH_API_KEY` | `sk-shodh-dev-local-testing-key` | API key. The default is fine for local use; replace for shared/remote setups. |
-| `SHODH_USER_ID` | `pi` | Memory namespace. Different IDs share the same server but separate memories. |
+| `SHODH_USER_ID` | _(per-project, derived from cwd)_ | Memory namespace. By default each project gets its own (e.g. `pi-szakdoga-5aa80885`); set this to share memories across projects or with teammates. |
 | `SHODH_DATA_PATH` | `~/.cache/shodh-memory/data` | RocksDB storage. Persists across sessions/restarts. |
 | `SHODH_SPAWN` | `1` | Set to `0` to *not* spawn the bundled binary (e.g. you've started shodh manually or in Docker). |
 | `SHODH_QUIET` | `0` | Set to `1` to suppress shodh stdout/stderr in pi's status area. |
@@ -217,18 +217,33 @@ export SHODH_USER_ID=alice            # or shared id for full team memory
 export SHODH_SPAWN=0                  # don't try to spawn locally
 ```
 
-### Changing the user namespace per project
+### Per-project memory (default behaviour)
 
-In `~/.zshrc`:
+Every project automatically gets its own namespace. The userId is derived from the project's absolute path:
 
-```bash
-shodh_project() {
-  export SHODH_USER_ID="pi-$(basename "$PWD")"
-}
-chpwd_functions+=(shodh_project)
+```
+/home/you/projects/auth-service  ->  pi-auth-service-3f2a1c4d
+/home/you/projects/website       ->  pi-website-9b2e4a8f
 ```
 
-Now each project has its own memory namespace.
+Format: `pi-<basename>-<8charHash>`. The basename gives at-a-glance recognition; the 8-char SHA-256 prefix of the absolute path disambiguates collisions (e.g. two `~/projects/api` directories under different parents).
+
+All projects share the same shodh server and the same RocksDB — but recall is naturally scoped: when pi is in project A, queries hit project A's userId; in project B, they hit B's. No port conflicts, no per-project processes.
+
+### Sharing memory across projects (override)
+
+Set `SHODH_USER_ID` explicitly to opt out of per-project isolation:
+
+```bash
+# All projects share one global brain
+export SHODH_USER_ID=pi
+
+# Or share between specific projects only
+cd ~/projects/auth-service && SHODH_USER_ID=pi-team-services pi
+cd ~/projects/users-service && SHODH_USER_ID=pi-team-services pi
+```
+
+When `SHODH_USER_ID` is set in the environment, the per-project derivation is skipped entirely — user override always wins.
 
 ---
 

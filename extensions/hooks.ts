@@ -36,7 +36,7 @@ import type {
 } from "@mariozechner/pi-coding-agent";
 import { isBashToolResult } from "@mariozechner/pi-coding-agent";
 import type { RecalledMemory } from "./types.ts";
-import type { ShodhServer } from "./shodh-server.ts";
+import { deriveUserId, type ShodhServer } from "./shodh-server.ts";
 import { SURPRISE_DIRECTIVE } from "./system-prompt.ts";
 
 // ---------------------------------------------------------------------------
@@ -144,6 +144,12 @@ export function installHooks(pi: ExtensionAPI, server: ShodhServer): void {
 	// session_start — analog of Claude Code's SessionStart hook
 	// -----------------------------------------------------------------------
 	pi.on("session_start", async (_event, ctx: ExtensionContext) => {
+		// Switch to a per-project memory namespace BEFORE starting the server,
+		// so subsequent remember/recall calls go to the right userId. The
+		// shodh server itself is shared across projects — only the userId
+		// (memory namespace) differs. SHODH_USER_ID env var overrides this.
+		server.setUserId(deriveUserId(ctx.cwd));
+
 		ctx.ui.setStatus("shodh", "starting…");
 		const ok = await server.start();
 		if (!ok) {
@@ -153,7 +159,7 @@ export function installHooks(pi: ExtensionAPI, server: ShodhServer): void {
 			);
 			return;
 		}
-		ctx.ui.setStatus("shodh", `memory online (${server.config.baseUrl})`);
+		ctx.ui.setStatus("shodh", `memory online (ns=${server.config.userId})`);
 	});
 
 	// -----------------------------------------------------------------------
