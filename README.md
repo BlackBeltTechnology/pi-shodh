@@ -511,4 +511,4 @@ So pi-shodh is two ideas stacked: at the model layer, "store the surprise"; at t
 
 ## License
 
-Apache-2.0, matching shodh-memory upstream. See [LICENSE](LICENSE) (TODO).
+MIT — see [LICENSE](LICENSE). Bundled shodh-memory binaries are Apache-2.0; see [NOTICE](NOTICE).

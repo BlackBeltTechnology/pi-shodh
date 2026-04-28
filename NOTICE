@@ -1,0 +1,33 @@
+pi-shodh
+Copyright 2026 Molnár Botond
+
+This product is licensed under the MIT License — see LICENSE.
+
+================================================================================
+Bundled third-party software
+================================================================================
+
+This distribution includes binary builds of shodh-memory in the binaries/
+directory. shodh-memory is independently developed and licensed:
+
+  shodh-memory
+  Copyright 2024-2025 Varun Ankush S. and contributors
+  https://github.com/varun29ankuS/shodh-memory
+  Licensed under the Apache License, Version 2.0
+  https://www.apache.org/licenses/LICENSE-2.0
+
+Per Apache-2.0 §4, the upstream license and notice files travel with the
+binaries. The shodh-memory release archives we download at install time
+contain these notices alongside the binaries.
+
+The shodh-memory binaries themselves transitively bundle:
+
+  ONNX Runtime — MIT License
+    Copyright (c) Microsoft Corporation
+    https://github.com/microsoft/onnxruntime
+
+  RocksDB — Apache-2.0 / GPL-2.0 (dual-licensed)
+    Copyright (c) Meta Platforms, Inc. and affiliates
+
+For the complete list of transitive dependencies and their licenses, see
+the upstream shodh-memory repository (Cargo.lock + Cargo.toml).
