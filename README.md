@@ -62,20 +62,25 @@ Backed by **shodh-memory** — a local Rust binary with offline embeddings, Hebb
 ### From git
 
 ```bash
-# project-local — only loads in this project
-pi install -l git:github.com/<you>/pi-shodh
+# project-local — only loads in this project (recommended)
+pi install -l git:git@github.com:BlackBeltTechnology/pi-shodh.git
 
 # global — all pi sessions
-pi install git:github.com/<you>/pi-shodh
+pi install git:git@github.com:BlackBeltTechnology/pi-shodh.git
 
 # pin to a tag or branch
-pi install -l git:github.com/<you>/pi-shodh@v0.1.0
+pi install -l git:git@github.com:BlackBeltTechnology/pi-shodh.git@v0.1.0
+```
+
+HTTPS works too if you don't have SSH keys set up:
+```bash
+pi install -l git:github.com/BlackBeltTechnology/pi-shodh
 ```
 
 ### From a local clone
 
 ```bash
-git clone https://github.com/<you>/pi-shodh
+git clone git@github.com:BlackBeltTechnology/pi-shodh.git
 cd pi-shodh
 npm install
 pi install -l "$PWD"            # project-local
@@ -99,8 +104,8 @@ Idempotent — re-running is fast (~150 ms) when binaries are already in place.
 |---|---|
 | Extension settings (project) | `<your-project>/.pi/settings.json` |
 | Extension settings (global) | `~/.pi/agent/settings.json` |
-| Git-cloned package (project) | `<your-project>/.pi/git/github.com/<you>/pi-shodh/` |
-| Git-cloned package (global) | `~/.pi/agent/git/github.com/<you>/pi-shodh/` |
+| Git-cloned package (project) | `<your-project>/.pi/git/github.com/BlackBeltTechnology/pi-shodh/` |
+| Git-cloned package (global) | `~/.pi/agent/git/github.com/BlackBeltTechnology/pi-shodh/` |
 | Downloaded binaries | `<package>/binaries/<platform>-<arch>/` |
 | Memory database | `~/.cache/shodh-memory/data/` |
 
